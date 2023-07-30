@@ -9,6 +9,6 @@ namespace Notes_App_Integration_v._01.Data
         {
 
         }
-        public DbSet<Notes> Notes { get; set; }
+        public DbSet<NotesModel> Notes { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Notes_App_Integration_v._01.Model
 {
-    public class Notes
+    public class NotesModel
     {
         [Key]
         public Guid Id { get; set; }
