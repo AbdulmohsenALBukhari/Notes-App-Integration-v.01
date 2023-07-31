@@ -39,10 +39,17 @@ namespace Notes_App_Integration_v._01.Controllers
         [HttpPost]
         public async Task<IActionResult> AddNote([FromBody] NotesModel Note)
         {
-            Note.Id = Guid.NewGuid();
-            await context.Notes.AddAsync(Note);
-            await context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetSingleNote), new {Id = Note.Id}, Note);
+            if (Note.title == "string" && Note.content == "string")
+            {
+                return NotFound("LOL");
+            }
+            else
+            {
+                Note.Id = Guid.NewGuid();
+                await context.Notes.AddAsync(Note);
+                await context.SaveChangesAsync();
+                return CreatedAtAction(nameof(GetSingleNote), new { Id = Note.Id }, Note);
+            }
         }
 
         //Post Update Note
