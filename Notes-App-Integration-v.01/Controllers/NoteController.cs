@@ -17,6 +17,7 @@ namespace Notes_App_Integration_v._01.Controllers
         }
         //Get All Notes
         [HttpGet]
+        
         public async Task<IActionResult> GetAllNotes()
         {
             IEnumerable<NotesModel> NotesList = await context.Notes.ToListAsync();
@@ -39,9 +40,10 @@ namespace Notes_App_Integration_v._01.Controllers
         [HttpPost]
         public async Task<IActionResult> AddNote([FromBody] NotesModel Note)
         {
-            if (Note.title == "string" && Note.content == "string")
+            if (!ModelState.IsValid || Note.title == "string" && Note.content == "string")
             {
-                return NotFound("LOL");
+                
+                return NotFound("bitc");
             }
             else
             {
