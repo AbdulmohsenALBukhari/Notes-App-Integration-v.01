@@ -12,8 +12,8 @@ using Notes_App_Integration_v._01.Data;
 namespace Notes_App_Integration_v._01.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230801113419_Account")]
-    partial class Account
+    [Migration("20230802080817_dbCreate")]
+    partial class dbCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -170,12 +170,7 @@ namespace Notes_App_Integration_v._01.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ConfirmPassword")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
@@ -212,13 +207,8 @@ namespace Notes_App_Integration_v._01.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("UserName")
-                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

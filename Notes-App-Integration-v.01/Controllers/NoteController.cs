@@ -17,7 +17,6 @@ namespace Notes_App_Integration_v._01.Controllers
         }
         //Get All Notes
         [HttpGet]
-        
         public async Task<IActionResult> GetAllNotes()
         {
             IEnumerable<NotesModel> NotesList = await context.Notes.ToListAsync();

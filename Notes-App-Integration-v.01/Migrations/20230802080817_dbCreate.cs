@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Notes_App_Integration_v._01.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateUser : Migration
+    public partial class dbCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -48,6 +48,19 @@ namespace Notes_App_Integration_v._01.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Notes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    content = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -213,6 +226,9 @@ namespace Notes_App_Integration_v._01.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "Notes");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Notes_App_Integration_v._01.Data;
 using Notes_App_Integration_v._01.Model;
+using Notes_App_Integration_v._01.ModelViews;
 
 namespace Notes_App_Integration_v._01.Controllers
 {
@@ -27,7 +28,7 @@ namespace Notes_App_Integration_v._01.Controllers
         }
         [HttpPost]
         [Route("Rigister")]
-        public async Task<IActionResult> Rigister(AccountUserModel model)
+        public async Task<IActionResult> Rigister(RegisterModel model)
         {
             if(ModelState.IsValid)
             {
@@ -41,15 +42,22 @@ namespace Notes_App_Integration_v._01.Controllers
                 }
                 var User = new AccountUserModel
                 {
-                    UserName = model.UserName,
                     Email = model.Email,
-                    password = model.password,
-                    ConfirmPassword = model.ConfirmPassword,
+                    UserName = model.UserName,
+                    PasswordHash = model.PasswordHash,
                 };
+                if(model.PasswordHash == null)
+                {
+                    return BadRequest("Eroor");
+                }
                 var result = await _user.CreateAsync(User);
                 if (result.Succeeded)
                 {
                     return Ok(result);
+                }
+                else
+                {
+                    return BadRequest(result.Errors);
                 }
             }
             return BadRequest("Bad Bitch");
