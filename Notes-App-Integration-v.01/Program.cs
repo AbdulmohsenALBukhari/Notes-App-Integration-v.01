@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Notes_App_Integration_v._01.Data;
@@ -13,7 +14,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddIdentity<AccountUserModel, AccountRoleModel>().AddEntityFrameworkStores< AppDbContext>();
+builder.Services.AddIdentity<AccountUserModel, AccountRoleModel>(options =>
+{
+
+}).AddEntityFrameworkStores< AppDbContext>()
+.AddDefaultTokenProviders();
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("MyConnection")
