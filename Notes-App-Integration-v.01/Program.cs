@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Notes_App_Integration_v._01.Data;
 using Notes_App_Integration_v._01.Model;
+using Notes_App_Integration_v._01.ModelViews;
+using Notes_App_Integration_v._01.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddIdentity<AccountUserModel, AccountRoleModel>(options =>
 {
+    options.SignIn.RequireConfirmedEmail = true;
 
 }).AddEntityFrameworkStores< AppDbContext>()
 .AddDefaultTokenProviders();
@@ -23,6 +26,10 @@ builder.Services.AddIdentity<AccountUserModel, AccountRoleModel>(options =>
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("MyConnection")
     ));
+
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+
+//builder.Services.AddTransient<EmailSender>();
 
 builder.Services.AddCors((setup)=>
 {
