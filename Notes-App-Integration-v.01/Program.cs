@@ -19,6 +19,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddIdentity<AccountUserModel, AccountRoleModel>(options =>
 {
     options.SignIn.RequireConfirmedEmail = true;
+    options.Lockout.MaxFailedAccessAttempts = 6;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 
 }).AddEntityFrameworkStores< AppDbContext>()
 .AddDefaultTokenProviders();

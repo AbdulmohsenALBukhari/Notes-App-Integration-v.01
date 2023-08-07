@@ -29,7 +29,9 @@ namespace Notes_App_Integration_v._01.Controllers
             this.signInManager = signInManager;
             this.email = email;
         }
-        //Get All user
+
+
+        //class {GetAllUserAsync}
         [HttpGet]
         [Route("GetAllUserAsync")]
         public async Task<IActionResult> GetAllUserAsync()
@@ -37,8 +39,10 @@ namespace Notes_App_Integration_v._01.Controllers
             //  get table user and insert value list
             IEnumerable<AccountUserModel> ListUser = await _dbContext.Users.ToListAsync();
             return Ok(ListUser);
-        }
-        //Create Register
+        }// end class {GetAllUserAsync}
+
+
+        //  class {Rigister}
         [HttpPost]
         [Route("Rigister")]
         public async Task<IActionResult> Rigister(RegisterModel model)
@@ -76,9 +80,9 @@ namespace Notes_App_Integration_v._01.Controllers
                         Token = HttpUtility.UrlEncode(token)
                     }, Request.Scheme);
 
-                    // Meassge Email
+                    // contact Email
                     var text = "Please Confirm Registration at our sute";
-                    var link = confirmLink;
+                    var link = "<a href=\""+confirmLink+"\">Send email</a>\r\n";
                  
                     //  Send Email
                 //    await email.SendEmailAsync(User.Email, text, link);
@@ -91,13 +95,18 @@ namespace Notes_App_Integration_v._01.Controllers
             }
 
             return BadRequest(ModelState);
-        }
+        }// end class {Rigister}
+
+
         // Metod check email and user name
         public bool Existes(string email, string userName)
         {
             return _dbContext.Users.Any(u => u.Email == email || u.UserName == userName);
-        }
+        }// end class {Existes}
+
+
         /*
+         * class {RegistreationConfirm}
          Metod check if user open link and after send 1 in database change [EmailConfirmed] to = 1
         this metod run if user open link [confirmLink] 
          */
@@ -120,14 +129,16 @@ namespace Notes_App_Integration_v._01.Controllers
             var result = await _user.ConfirmEmailAsync(user, HttpUtility.UrlDecode(Token));
             if (result.Succeeded)
             {
-                return Ok(result);
+                return Ok("Done");
             }
             else
             {
                 return BadRequest(result.Errors);
             }
-        }
-        //  Login Metod
+        }// end class {RegistreationConfirm}
+
+
+        //  Metod {Login}
         [HttpPost]
         [Route("Login")]
         public async Task<IActionResult> Login(LoginViewModel model)
@@ -136,23 +147,30 @@ namespace Notes_App_Integration_v._01.Controllers
             {
                 return NotFound(model);
             }
-            //  Find Id 
+            //  Find user by email
             var user = await _user.FindByEmailAsync(model.Email);
             if (user == null)
             {
                 return NotFound(user);
             }
-            //  check the token and decode link and make  in datebase
-            var result = await signInManager.PasswordSignInAsync(user, model.PasswordHash, model.RememberMe, false);
+            else if (!user.EmailConfirmed)
+            {
+                return BadRequest("User is not Confirm user Please check you email");
+            }
+            //  check if user and password is true or fales and if user login more 3 time block user
+            var result = await signInManager.PasswordSignInAsync(user, model.PasswordHash, model.RememberMe, true);
             if (result.Succeeded)
             {
                 return Ok("Login success");
             }
-            else
+            else if (result.IsLockedOut)
             {
-                return BadRequest("you Is Not Allowed");
+                return Unauthorized("user account is blocked");
             }
-        }
+
+            return BadRequest(result);
+        }// end class {Login}
+
 
     }   // end Main Class
 
