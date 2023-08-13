@@ -33,6 +33,8 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 //builder.Services.AddTransient<EmailSender>();
 
+builder.Services.AddCors();
+
 builder.Services.AddCors((setup)=>
 {
     setup.AddPolicy("default", (options) =>
@@ -50,9 +52,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("default");
+app.UseCors(x => x.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod());
 
 app.UseHttpsRedirection();
+app.UseRouting();
 
 app.UseAuthorization();
 app.UseAuthentication();
