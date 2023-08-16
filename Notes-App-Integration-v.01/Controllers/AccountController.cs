@@ -82,11 +82,11 @@ namespace Notes_App_Integration_v._01.Controllers
 
                     // contact Email
                     var text = "Please Confirm Registration at our sute";
-                    var link = "<a href=\""+confirmLink+"\">Send email</a>\r\n";
+                //    var link = "<a href=\""+confirmLink+"\">Confirm</a>\r\n";
                  
                     //  Send Email
                 //    await email.SendEmailAsync(User.Email, text, link);
-                    return Ok(link);
+                    return Ok(confirmLink);
                 }
                 else
                 {

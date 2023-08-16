@@ -10,5 +10,6 @@ namespace Notes_App_Integration_v._01.ModelViews
         public string UserName { get; set; }
         [Required]
         public string PasswordHash { get; set; }
+        
     }
 }
