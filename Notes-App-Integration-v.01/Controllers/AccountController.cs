@@ -39,7 +39,7 @@ namespace Notes_App_Integration_v._01.Controllers
             //  get table user and insert value list
             IEnumerable<AccountUserModel> ListUser = await _dbContext.Users.ToListAsync();
             return Ok(ListUser);
-        }// end class {GetAllUserAsync}
+        }// end class {GetAllUserAsync} 
 
 
         //  class {Rigister}
@@ -170,6 +170,55 @@ namespace Notes_App_Integration_v._01.Controllers
 
             return BadRequest(result);
         }// end class {Login}
+
+        //  get by id
+        [HttpGet]
+        [Route("get-by-id/{Id}")]
+        [ActionName("FindById")]
+        public async Task<IActionResult> GetSingleNote([FromRoute] string Id)
+        {
+            var itme = await _dbContext.Users.SingleOrDefaultAsync(x => x.Id == Id);
+            if (itme != null)
+            {
+                return Ok(itme.UserName);
+            }
+            return NotFound("Note Not found");
+        }// end metod by id
+
+        //  update user
+        [HttpPut]
+        [Route("update-user/{Id}")]
+        public async Task<IActionResult> UpdateNote([FromRoute] string Id, [FromBody] AccountUserModel userModel)
+        {
+            var UpdateUser= await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == Id);
+            if (UpdateUser != null)
+            {
+                UpdateUser.UserName = userModel.UserName;
+                UpdateUser.Email = userModel.Email;
+                UpdateUser.PasswordHash = userModel.PasswordHash;
+                await _dbContext.SaveChangesAsync();
+                return Ok(UpdateUser);
+            }
+            return NotFound("Bad requst");
+        }// end update user
+
+
+        // Delete user
+        [HttpDelete]
+        [Route("Remove-user/{Id}")]
+        public async Task<IActionResult> DeleteNote([FromRoute] string Id)
+        {
+            var DeleteItem = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == Id);
+            if (DeleteItem != null)
+            {
+                _dbContext.Remove(DeleteItem);
+                await _dbContext.SaveChangesAsync();
+                return Ok("Done Bitch");
+            }
+            return NotFound("Note Not found");
+        }   //end Delete User
+
+
 
 
     }   // end Main Class
