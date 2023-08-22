@@ -8,6 +8,7 @@ namespace Notes_App_Integration_v._01.ModelViews
         public string Email { get; set; }
         [Required]
         public string PasswordHash { get; set; }
+        [Required]
         public bool RememberMe { get; set; }
     }
 }

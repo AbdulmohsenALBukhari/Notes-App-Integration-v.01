@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +10,7 @@ using Notes_App_Integration_v._01.Data;
 using Notes_App_Integration_v._01.Model;
 using Notes_App_Integration_v._01.ModelViews;
 using Notes_App_Integration_v._01.Services;
+using System.Security.Claims;
 using System.Web;
 
 namespace Notes_App_Integration_v._01.Controllers
@@ -20,18 +23,21 @@ namespace Notes_App_Integration_v._01.Controllers
         private readonly UserManager<AccountUserModel> _user;
         private readonly SignInManager<AccountUserModel> signInManager;
         private readonly IEmailSender email;
+        private readonly RoleManager<AccountRoleModel> roleManager;
 
         public AccountController(AppDbContext dbContext, UserManager<AccountUserModel> userManager,
-            SignInManager<AccountUserModel> signInManager, IEmailSender email)
+            SignInManager<AccountUserModel> signInManager, IEmailSender email,RoleManager<AccountRoleModel> roleManager)
         {
             this._dbContext = dbContext;
             this._user = userManager;
             this.signInManager = signInManager;
             this.email = email;
+            this.roleManager = roleManager;
         }
 
 
         //class {GetAllUserAsync}
+        [Authorize]
         [HttpGet]
         [Route("GetAllUserAsync")]
         public async Task<IActionResult> GetAllUserAsync()
@@ -143,6 +149,8 @@ namespace Notes_App_Integration_v._01.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
+            await CreateAdmin();
+            await CreateRoles();
             if (model == null)
             {
                 return NotFound(model);
@@ -161,7 +169,17 @@ namespace Notes_App_Integration_v._01.Controllers
             var result = await signInManager.PasswordSignInAsync(user, model.PasswordHash, model.RememberMe, true);
             if (result.Succeeded)
             {
-                return Ok("Login success");
+                if (await roleManager.RoleExistsAsync("User"))
+                {
+                    if(! await _user.IsInRoleAsync(user, "User"))
+                    {
+                        await _user.AddToRoleAsync(user, "User");
+                    }
+                }
+                var roleName = await GetUserBy(user.Id);
+                if (roleName != null)
+                AddCookies(user.UserName, roleName, user.Id, model.RememberMe);
+                return Ok();
             }
             else if (result.IsLockedOut)
             {
@@ -171,11 +189,29 @@ namespace Notes_App_Integration_v._01.Controllers
             return BadRequest(result);
         }// end class {Login}
 
+        [HttpGet]
+        [Route("Logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Ok();
+        }
+
+        private async Task<string> GetUserBy(string id)
+        {
+            var userRole = await _dbContext.UserRoles.FirstOrDefaultAsync(x => x.UserId == id);
+            if(userRole != null)
+            {
+                return await _dbContext.Roles.Where(x => x.Id == userRole.RoleId).Select(x => x.Name).FirstOrDefaultAsync();
+            }
+            return null;
+        }
+
         //  get by id
         [HttpGet]
         [Route("get-by-id/{Id}")]
         [ActionName("FindById")]
-        public async Task<IActionResult> GetSingleNote([FromRoute] string Id)
+        public async Task<IActionResult> GetUserById([FromRoute] string Id)
         {
             var itme = await _dbContext.Users.SingleOrDefaultAsync(x => x.Id == Id);
             if (itme != null)
@@ -218,10 +254,89 @@ namespace Notes_App_Integration_v._01.Controllers
             return NotFound("Note Not found");
         }   //end Delete User
 
+        private async Task CreateAdmin()
+        {
+            var admin = await _user.FindByNameAsync("Admin");
+            if (admin == null)
+            {
+                var User = new AccountUserModel
+                {
+                    Email = "manager@admin.com",
+                    UserName = "Admin",
+                    EmailConfirmed = true
+                };
+                var x = await _user.CreateAsync(User,"@Password125856479");
+                if (x.Succeeded)
+                {
+                    if (await roleManager.RoleExistsAsync("Admin"))
+                    {
+                        await _user.AddToRoleAsync(User, "Admin");
+                    }
+                }
+            }
+        }
 
+        private async Task CreateRoles()
+        {
+            if (roleManager.Roles.Count() <1)
+            {
+                var role = new AccountRoleModel
+                {
+                    Name = "Admin",
+                };
+                await roleManager.CreateAsync(role);
 
+                role = new AccountRoleModel
+                {
+                    Name = "User",
+                };
+                await roleManager.CreateAsync(role);
+            }
+        }
+
+        public async void AddCookies(string username, string roleName,string userId, bool remember)
+        {
+            var clim = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, username),
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Role, roleName)
+            };
+
+            var claimIdentifier = new ClaimsIdentity(clim, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            if (remember)
+            {
+                var authProperties = new AuthenticationProperties
+                {
+                    AllowRefresh = true,
+                    IsPersistent = remember,
+                    ExpiresUtc = DateTime.UtcNow.AddDays(15),
+                };
+                await HttpContext.SignInAsync
+                    (
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                         new ClaimsPrincipal(claimIdentifier),
+                         authProperties
+                    );
+            }
+            else
+            {
+                var authProperties = new AuthenticationProperties
+                {
+                    AllowRefresh = true,
+                    IsPersistent = remember,
+                    ExpiresUtc = DateTime.UtcNow.AddMinutes(30),
+                };
+                await HttpContext.SignInAsync
+                    (
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                         new ClaimsPrincipal(claimIdentifier),
+                         authProperties
+                    );
+
+            }
+        }
 
     }   // end Main Class
-
-
 }

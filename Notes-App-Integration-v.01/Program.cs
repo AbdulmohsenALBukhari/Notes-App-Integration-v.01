@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -25,6 +26,28 @@ builder.Services.AddIdentity<AccountUserModel, AccountRoleModel>(options =>
 }).AddEntityFrameworkStores< AppDbContext>()
 .AddDefaultTokenProviders();
 
+// Cookie Services
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.CheckConsentNeeded = context => true;
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+});
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+}).AddCookie(option =>
+{
+    option.Cookie.HttpOnly = true;
+    option.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    option.LogoutPath = "/Account/Logout";
+    option.SlidingExpiration = true;
+
+});
+
+// end cookie Services
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("MyConnection")
     ));
@@ -57,8 +80,9 @@ app.UseCors(x => x.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAn
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseCookiePolicy();
+app.UseAuthorization();
 
 app.MapControllers();
 
