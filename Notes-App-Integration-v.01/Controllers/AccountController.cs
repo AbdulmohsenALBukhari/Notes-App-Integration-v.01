@@ -17,6 +17,7 @@ namespace Notes_App_Integration_v._01.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AccountController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
@@ -37,7 +38,6 @@ namespace Notes_App_Integration_v._01.Controllers
 
 
         //class {GetAllUserAsync}
-        [Authorize]
         [HttpGet]
         [Route("GetAllUserAsync")]
         public async Task<IActionResult> GetAllUserAsync()
@@ -105,7 +105,7 @@ namespace Notes_App_Integration_v._01.Controllers
 
 
         // Metod check email and user name
-        public bool Existes(string email, string userName)
+        private bool Existes(string email, string userName)
         {
             return _dbContext.Users.Any(u => u.Email == email || u.UserName == userName);
         }// end class {Existes}
@@ -116,6 +116,7 @@ namespace Notes_App_Integration_v._01.Controllers
          Metod check if user open link and after send 1 in database change [EmailConfirmed] to = 1
         this metod run if user open link [confirmLink] 
          */
+        [AllowAnonymous]
         [HttpGet]
         [Route("RegistreationConfirm")]
         public async Task<IActionResult> RegistreationConfirm(string id, string Token)
@@ -145,6 +146,7 @@ namespace Notes_App_Integration_v._01.Controllers
 
 
         //  Metod {Login}
+        [AllowAnonymous]
         [HttpPost]
         [Route("Login")]
         public async Task<IActionResult> Login(LoginViewModel model)
@@ -176,7 +178,7 @@ namespace Notes_App_Integration_v._01.Controllers
                         await _user.AddToRoleAsync(user, "User");
                     }
                 }
-                var roleName = await GetUserBy(user.Id);
+                var roleName = await GetRoleNameByUserId(user.Id);
                 if (roleName != null)
                 AddCookies(user.UserName, roleName, user.Id, model.RememberMe);
                 return Ok();
@@ -189,6 +191,7 @@ namespace Notes_App_Integration_v._01.Controllers
             return BadRequest(result);
         }// end class {Login}
 
+        [AllowAnonymous]
         [HttpGet]
         [Route("Logout")]
         public async Task<IActionResult> Logout()
@@ -197,7 +200,7 @@ namespace Notes_App_Integration_v._01.Controllers
             return Ok();
         }
 
-        private async Task<string> GetUserBy(string id)
+        private async Task<string> GetRoleNameByUserId(string id)
         {
             var userRole = await _dbContext.UserRoles.FirstOrDefaultAsync(x => x.UserId == id);
             if(userRole != null)
@@ -294,7 +297,7 @@ namespace Notes_App_Integration_v._01.Controllers
             }
         }
 
-        public async void AddCookies(string username, string roleName,string userId, bool remember)
+        private async void AddCookies(string username, string roleName,string userId, bool remember)
         {
             var clim = new List<Claim>
             {
@@ -336,6 +339,24 @@ namespace Notes_App_Integration_v._01.Controllers
                     );
 
             }
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("GetRoleName/{email}")]
+        public async Task<string> GetRoleName(string email)
+        {
+            var user = await _user.FindByEmailAsync(email);
+            if (user != null)
+            {
+                var userRole = await _dbContext.UserRoles.FirstOrDefaultAsync(x => x.UserId == user.Id);
+                if (userRole != null)
+                {
+                    return await _dbContext.Roles.Where(x => x.Id == userRole.RoleId).Select(x => x.Name).FirstOrDefaultAsync();
+                }
+            }
+            
+            return null;
         }
 
     }   // end Main Class
